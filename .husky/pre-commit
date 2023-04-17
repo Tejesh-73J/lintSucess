@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Get the list of staged JS files
+JS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.jsx\?$')
+
+# If there are no JS files, exit
+if [ -z "$JS_FILES" ]; then
+  exit 0
+fi
+
+# Run ESLint on the staged files
+echo "Running ESLint..."
+eslint --fix $JS_FILES
+ESLINT_STATUS=$?
+
+# Run Prettier on the staged files
+echo "Running Prettier..."
+npx prettier --write $JS_FILES
+PRETTIER_STATUS=$?
+
+# If either ESLint or Prettier returned an error, exit with error status
+if [ $ESLINT_STATUS -ne 0 -o $PRETTIER_STATUS -ne 0 ]; then
+  echo "ESLint or Prettier returned an error."
+  exit 1
+fi
+
+# Add the changes back to the staging area
+git add $JS_FILES
+
+# Commit the changes
+echo "Committing changes..."
+exit 0
